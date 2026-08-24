@@ -6,17 +6,17 @@ Datasets are downloaded from Hugging Face into ``data/`` -- see README.md.
 Examples::
 
     # Train LPAE-u on Polyvore-630
-    python run_lpae_net.py train \
+    python main.py train \
         --cfg configs/polyvore_630_lpae_u_resnet34_nn.yaml \
         --log-dir summaries/polyvore_630_lpae_u_resnet34_nn --gpus 0
 
     # Evaluate AUC / NDCG with random negatives
-    python run_lpae_net.py evaluate \
+    python main.py evaluate \
         --cfg configs/polyvore_630_lpae_u_resnet34_nn.yaml \
         --load-trained summaries/polyvore_630_lpae_u_resnet34_nn/checkpoints/best_model_195_val_auc=0.8935.pt
 
     # Evaluate Fill-In-The-Blank accuracy
-    python run_lpae_net.py fitb \
+    python main.py fitb \
         --cfg configs/polyvore_630_lpae_u_resnet34_nn.yaml \
         --load-trained summaries/polyvore_630_lpae_u_resnet34_nn/checkpoints/best_model_195_val_auc=0.8935.pt
 """
