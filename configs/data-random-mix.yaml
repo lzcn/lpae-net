@@ -1,4 +1,0 @@
-data_mode: "PointwiseOutfit"
-pos_mode: "Fix"
-neg_mode: "RandomMix"
-neg_param: { ratio: 10, type_aware: true }

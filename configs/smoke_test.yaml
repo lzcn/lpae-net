@@ -1,10 +1,10 @@
-# LPAE-u (ResNet-34-nn) on Polyvore-519
+# Smoke-test config: tiny run on Polyvore-630 to verify the pipeline end to end.
 data:
-  root: data/polyvore-u/original/tuples_519 # outfit tuple splits
-  features: data/polyvore-u/features/resnet34 # pre-extracted ResNet-34 LMDB
-  batch_size: 256
-  num_workers: 4
-  num_users: 519
+  root: data/polyvore-u/original/tuples_630
+  features: data/polyvore-u/features/resnet34
+  batch_size: 64
+  num_workers: 2
+  num_users: 630
   num_fitb_choices: 4
 
 train:
@@ -18,10 +18,10 @@ test:
   type_aware: true
 
 net:
-  name: lpae_g # shared + user-specific anchors
+  name: lpae_u
   backbone: resnet34
   use_visual: true
-  use_nn_feature: true # consume the pre-extracted features directly
+  use_nn_feature: true
   embd_dim: 128
   com_memory: false
   num_sab: 2
@@ -34,7 +34,7 @@ net:
 
 optim:
   name: SGD
-  lr: 0.1
+  lr: 0.01
   weight_decay: 1.0e-6
   param: { momentum: 0.9 }
   scheduler:
@@ -44,7 +44,8 @@ optim:
     patience: 10
     cooldown: 10
 
-epochs: 200
+epochs: 1
 grad_clip: 0.5
 display_interval: 50
-summary_interval: 200
+summary_interval: 100
+seed: 2021

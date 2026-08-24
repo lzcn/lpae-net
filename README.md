@@ -1,88 +1,102 @@
 # LPAE-Net
 
-## Description
+This repository contains the code of the paper _"Personalized Outfit Recommendation with Learnable Anchors"_ (CVPR 2021).
 
-This responsitory contains the code of paper _"Personalized Outfit Recommendation with Learnable Anchors_ - CVPR 2021"
+The code is self-contained: it only depends on PyTorch and a few common Python packages, and reads the preprocessed datasets published on [Hugging Face](https://huggingface.co/datasets/lzcn/outfit-datasets).
 
-## Train the model
+## Requirements
 
-1. Clone this responsitory with submodules
+```bash
+pip install -r requirements.txt
+```
 
-   ```bash
-   git clone --recurse-submodules https://github.com/lzcn/LPAE-Net.git
-   ```
+## Data preparation
 
-2. Install submodules
+Download the preprocessed datasets (pre-extracted ResNet-34 item features + outfit tuples) from Hugging Face and place them under `data/` in the repository root:
 
-   - `torchutils` is my personal responsitory that contains utilities for PyTorch.
+```bash
+git lfs install
+git clone https://huggingface.co/datasets/lzcn/outfit-datasets data
+```
 
-     ```bash
-     cd torchutils
-     python setup.py install
-     ```
+The layout used by this project:
 
-   - `outfit-datasets` is another responsitory that contains currently used fashion datasets for outfit recommendation.
+```text
+data/
+└── polyvore-u/
+    ├── features/
+    │   └── resnet34/           # pre-extracted ResNet-34 item features (LMDB)
+    └── original/
+        ├── tuples_630/         # 630-user personalized split (+ FITB questions)
+        └── tuples_519/         # 519-user personalized split
+```
 
-     ```bash
-     cd outfit-datasets
-     python setup.py install
-     ```
+> _ResNet-34-nn_ means the pretrained image features extracted from [ResNet-34](https://arxiv.org/abs/1512.03385) are used directly, i.e. the backbone is not fine-tuned and no raw images are needed.
 
-3. In each folder of `outfit-datasets`, use the scripts to prepare the dataset. I will improve the `outfit-datasets` so that you can test the model on different datasets that are not used in the original paper.
+## Quick check
 
-4. Use the `run_lpae_net.py` to train or test.
+Run a 1-epoch sanity-check training (~1 minute on a GPU):
 
-   - Train LPAE-Net
+```bash
+python run_lpae_net.py train --cfg configs/smoke_test.yaml --log-dir summaries/smoke_test
+```
 
-     ```bash
-     ./run_lpae_net.py train \
-        --cfg configs/polyvore_630_lpae_u_resnet34_nn.yaml \
-        --log-dir summaries/polyvore_630_lpae_u_resnet34_nn
-        --gpus 0 \
-        --name train
-     ```
+## Train
 
-   - Evaluate AUC
+```bash
+python run_lpae_net.py train \
+    --cfg configs/polyvore_630_lpae_u_resnet34_nn.yaml \
+    --log-dir summaries/polyvore_630_lpae_u_resnet34_nn \
+    --gpus 0 \
+    --name train
+```
 
-     ```bash
-     ./run_lpae_net.py evaluate \
-        --cfg configs/polyvore_630_lpae_u_resnet34_nn.yaml \
-        --log-dir summaries/polyvore_630_lpae_u_resnet34_nn \
-        --load-trained summaries/polyvore_630_lpae_u_resnet34_nn/checkpoints/best_model.pt \
-        --gpus 0 \
-        --name evalute-auc
-     ```
+Logs are written to `summaries/<log-dir>/train.log`, TensorBoard events are recorded alongside, and the top-5 checkpoints ranked by validation AUC are kept under `summaries/<log-dir>/checkpoints/`.
 
-   - Evaluate FITB
+## Evaluate
 
-     uncomment the following line in the configuration file to evaluate the FITB using corresponding dataset
+AUC / NDCG with randomly mixed negatives (`test.neg_ratio`, averaged over `--num-runs`):
 
-     ```yaml
-     dataset: !include "data-fitb.yaml"
-     ```
+```bash
+python run_lpae_net.py evaluate \
+    --cfg configs/polyvore_630_lpae_u_resnet34_nn.yaml \
+    --log-dir summaries/polyvore_630_lpae_u_resnet34_nn \
+    --load-trained summaries/polyvore_630_lpae_u_resnet34_nn/checkpoints/best_model_XXX_val_auc=0.XXXX.pt \
+    --gpus 0 \
+    --num-runs 10 \
+    --name evaluate-auc
+```
 
-     ```bash
-     ./run_lpae_net.py fitb \
-        --cfg configs/polyvore_630_lpae_u_resnet34_nn.yaml \
-        --log-dir summaries/polyvore_630_lpae_u_resnet34_nn \
-        --load-trained summaries/polyvore_630_lpae_u_resnet34_nn/checkpoints/best_model.pt \
-        --gpus 0 \
-        --name evalute-fitb
-     ```
+Fill-In-The-Blank accuracy using the pre-computed questions shipped with the dataset:
+
+```bash
+python run_lpae_net.py fitb \
+    --cfg configs/polyvore_630_lpae_u_resnet34_nn.yaml \
+    --log-dir summaries/polyvore_630_lpae_u_resnet34_nn \
+    --load-trained summaries/polyvore_630_lpae_u_resnet34_nn/checkpoints/best_model_XXX_val_auc=0.XXXX.pt \
+    --gpus 0 \
+    --name evaluate-fitb
+```
+
+To run on Polyvore-_519_ or with the shared-anchor variant, swap the config for `configs/polyvore_519_*` / `*_lpae_g_*`.
+
+## Configuration
+
+Each YAML file in `configs/` is fully self-contained:
+
+| Key | Description |
+| --- | --- |
+| `data.root` / `data.features` | split folder and feature reader path |
+| `train/valid/test.neg_ratio` | negatives per positive; `<= 0` uses the fixed `{phase}_neg` files |
+| `net.name` | `lpae_u`, `lpae_g`, or `LatentFactorNet` |
+| `optim` | optimizer + LR scheduler (stepped on validation AUC) |
 
 ## Logs
 
-- LPAE-_u_ (_ResNet-34-nn_) Polyvore-_630_
+Training logs released with the paper:
 
-  - [config.yaml](configs/polyvore_630_lpae_u_resnet34_nn.yaml)
-  - [train.log](summaries/polyvore_630_lpae_u_resnet34_nn/train.log)
-
-- LPAE-_u_ (_ResNet-34-nn_) Polyvore-_519_
-
-  - [config.yaml](configs/polyvore_519_lpae_u_resnet34_nn.yaml)
-  - [train.log](summaries/polyvore_519_lpae_u_resnet34_nn/train.log)
-
-> _ResNet-34-nn_ reprensents the pretrained image features extracted from [ResNet-34](https://arxiv.org/abs/1512.03385), i.e. the backbone is not fine-tuned.
+- LPAE-_u_ (_ResNet-34-nn_) Polyvore-_630_: [config](configs/polyvore_630_lpae_u_resnet34_nn.yaml) · [train.log](summaries/polyvore_630_lpae_u_resnet34_nn/train.log)
+- LPAE-_u_ (_ResNet-34-nn_) Polyvore-_519_: [config](configs/polyvore_519_lpae_u_resnet34_nn.yaml) · [train.log](summaries/polyvore_519_lpae_u_resnet34_nn/train.log)
 
 ## Contact
 

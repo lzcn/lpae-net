@@ -1,41 +1,50 @@
-data_param:
-  factory: OutfitLoaderParam
-  data_root: "./outfit-datasets/polyvore-u/processed/original/tuples_630"
-  readers:
-    [
-      {
-        reader: "TensorLMDB",
-        path: "./outfit-datasets/polyvore-u/processed/features/resnet34",
-      },
-    ]
-  dataset: !include "data-random-mix.yaml"
+# LPAE-u (ResNet-34-nn) on Polyvore-630
+data:
+  root: data/polyvore-u/original/tuples_630 # outfit tuple splits
+  features: data/polyvore-u/features/resnet34 # pre-extracted ResNet-34 LMDB
   batch_size: 256
   num_workers: 4
   num_users: 630
-  num_types: 3
-  max_items: 3
-  shuffle: false
+  num_fitb_choices: 4
 
-train_data_param:
-  phase: train
-  dataset:
-    data_mode: "PairwiseOutfit"
-    pos_mode: "Fix"
-    neg_mode: "RandomMix"
-    neg_param: { ratio: 1, type_aware: true }
-  shuffle: true
+train:
+  neg_ratio: 1
+  type_aware: true
+valid:
+  neg_ratio: 10
+  type_aware: true
+test:
+  neg_ratio: 10
+  type_aware: true
 
-valid_data_param:
-  phase: valid
+net:
+  name: lpae_u # lpae_u | lpae_g | LatentFactorNet
+  backbone: resnet34
+  use_visual: true
+  use_nn_feature: true # consume the pre-extracted features directly
+  embd_dim: 128
+  com_memory: false
+  num_sab: 2
+  num_points: 0
+  num_seeds: 1
+  num_proto: 64
+  num_heads: 4
+  logdet: true
+  loss_weight: { rank_loss: 1.0, l1reg: 1.0e-2 }
 
-test_data_param:
-  # dataset: !include "data-fitb.yaml"
-  phase: test
+optim:
+  name: SGD
+  lr: 0.1
+  weight_decay: 1.0e-6
+  param: { momentum: 0.9 }
+  scheduler:
+    name: ReduceLROnPlateau
+    mode: max
+    factor: 0.5
+    patience: 10
+    cooldown: 10
 
-net_param: !include "lpae_u.yaml"
-
-optim_param: !include "sgd_optimizer.yaml"
-
+epochs: 200
+grad_clip: 0.5
 display_interval: 50
 summary_interval: 200
-epochs: 200

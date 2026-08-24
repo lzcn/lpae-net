@@ -1,0 +1,9 @@
+numpy>=1.21
+torch>=1.11
+torchvision>=0.12
+lmdb>=1.2
+PyYAML>=5.4
+scikit-learn>=1.0
+tensorboard>=2.8
+tqdm>=4.60
+Pillow>=8.0

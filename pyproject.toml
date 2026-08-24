@@ -1,8 +1,16 @@
+[project]
+name = "lpae-net"
+version = "1.0"
+description = "Personalized Outfit Recommendation with Learnable Anchors (CVPR 2021)"
+readme = "README.md"
+requires-python = ">=3.8"
+
 [tool.black]
 line-length = 120
+
 [tool.pyright]
 exclude = [
   "**/checkpoints",
   "**/summaries",
-  "**/results",
+  "**/data",
 ]

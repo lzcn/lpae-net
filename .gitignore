@@ -1,1 +1,13 @@
-summaries
+# data downloaded from Hugging Face lives here
+/data
+
+# training outputs (tracked logs stay tracked)
+summaries/
+
+# python
+__pycache__/
+*.pyc
+
+# editors
+.vscode/
+.idea/
