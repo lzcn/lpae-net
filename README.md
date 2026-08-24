@@ -40,3 +40,7 @@ Configs are self-contained; `polyvore_519_*` and `*_lpae_g_*` swap dataset or va
 ## Logs
 
 Training logs of the paper: [Polyvore-630](summaries/polyvore_630_lpae_u_resnet34_nn/train.log) · [Polyvore-519](summaries/polyvore_519_lpae_u_resnet34_nn/train.log)
+
+## License
+
+MIT.
