@@ -90,13 +90,11 @@ class RandomMix(Generator):
                 sampled_items = sampled_items[:size] + [utils.NONE_TYPE] * (max_items - size)
                 if tuple(sampled_items) in pos_set:
                     continue
-                if not self.type_aware:
-                    # keep the category layout of a regular outfit
-                    sampled_types = list(map(int, sampled_types)) + [utils.NONE_TYPE] * (max_items - size)
-                    sampled_types = np.array(sampled_types, dtype=int)
+                # keep the category layout of a regular outfit
+                sampled_types = list(map(int, sampled_types)) + [utils.NONE_TYPE] * (max_items - size)
                 n_sampled += 1
                 neg_items.append(sampled_items)
-                neg_types.append(list(map(int, sampled_types)))
+                neg_types.append(sampled_types)
         neg_items = np.array(neg_items, dtype=int)
         neg_types = np.array(neg_types, dtype=int)
         return np.hstack([neg_uids, neg_sizes, neg_items, neg_types])
